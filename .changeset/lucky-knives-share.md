@@ -1,5 +1,5 @@
 ---
-"skpkg": major
+"claude-desktop-skills": major
 ---
 
 Release

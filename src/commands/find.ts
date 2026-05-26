@@ -3,7 +3,7 @@ import { scanSkills } from "../core/scanner.js";
 import { REGISTRY_PATH } from "../constants.js";
 import { existsSync } from "fs";
 
-export function searchCommand(query: string): void {
+export function findCommand(query: string): void {
   const registry = readRegistry(REGISTRY_PATH);
   const repos = Object.entries(registry.repos);
 

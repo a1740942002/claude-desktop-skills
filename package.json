@@ -1,9 +1,9 @@
 {
-  "name": "skpkg",
+  "name": "claude-desktop-skills",
   "version": "0.0.1",
   "description": "Install skills from GitHub repos into Claude Desktop",
   "bin": {
-    "skpkg": "dist/index.js"
+    "claude-desktop-skills": "dist/index.js"
   },
   "scripts": {
     "dev": "bun src/index.ts",

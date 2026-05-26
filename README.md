@@ -1,11 +1,11 @@
-# skpkg
+# claude-desktop-skills
 
 CLI tool that packages skills from GitHub repos into `.skill` files for Claude Desktop.
 
 ## Quick Start
 
 ```bash
-npx skpkg pack getagentseal/founder-playbook
+npx claude-desktop-skills pack <owner/repo>
 ```
 
 Then upload in Claude Desktop: **Customize → Skills → + → Create skill → Upload a skill**
@@ -18,19 +18,19 @@ Works with `npx` and `bunx`.
 
 ```bash
 # Pack all skills from a repo
-skpkg pack getagentseal/founder-playbook
+npx claude-desktop-skills pack <owner/repo>
 
-# Pack a specific skill
-skpkg pack getagentseal/founder-playbook --skill mom-test
+# Pack a specific skill only
+npx claude-desktop-skills pack <owner/repo> --skill <skill-name>
 
 # Custom output directory
-skpkg pack getagentseal/founder-playbook --output ./my-skills
+npx claude-desktop-skills pack <owner/repo> --output ./my-skills
 
 # List skills in a repo (without packing)
-skpkg list getagentseal/founder-playbook
+npx claude-desktop-skills list <owner/repo>
 
 # Search across cached repos
-skpkg search "customer"
+npx claude-desktop-skills find <query>
 ```
 
 Output goes to `skills-pack/<repo>-<timestamp>/` with a README and all `.skill` files.
@@ -38,7 +38,7 @@ Output goes to `skills-pack/<repo>-<timestamp>/` with a README and all `.skill` 
 ## Install globally (optional)
 
 ```bash
-npm install -g skpkg
+npm install -g claude-desktop-skills
 ```
 
 ## How it works
@@ -52,13 +52,13 @@ npm install -g skpkg
 
 [`vercel-labs/skills`](https://github.com/vercel-labs/skills) is a general-purpose skill manager for 55+ AI coding agents (Claude Code, Cursor, Copilot, etc.). It installs skills by symlinking into agent-specific directories like `.claude/skills/`.
 
-**skpkg solves a different problem** — it targets **Claude Desktop**, which doesn't read from `.claude/skills/`. Claude Desktop requires `.skill` files uploaded through its UI. No other tool produces this format.
+**claude-desktop-skills solves a different problem** — it targets **Claude Desktop**, which doesn't read from `.claude/skills/`. Claude Desktop requires `.skill` files uploaded through its UI. No other tool produces this format.
 
-| | skpkg | vercel-labs/skills |
+| | claude-desktop-skills | vercel-labs/skills |
 |---|---|---|
 | Target | Claude Desktop | Claude Code + 55 agents |
 | Output | `.skill` zip files for upload | Symlinks to agent directories |
-| Workflow | `npx skpkg pack` → upload in UI | `npx skills add` → ready to use |
+| Workflow | `npx claude-desktop-skills pack` → upload in UI | `npx skills add` → ready to use |
 | Unique value | Only tool that produces `.skill` format | Multi-agent support |
 
-**TL;DR** — Use `vercel-labs/skills` if you're in Claude Code or other coding agents. Use `skpkg` if you need skills in **Claude Desktop**.
+**TL;DR** — Use `vercel-labs/skills` if you're in Claude Code or other coding agents. Use `claude-desktop-skills` if you need skills in **Claude Desktop**.
