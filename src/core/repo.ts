@@ -1,5 +1,5 @@
 import { join } from "path";
-import simpleGit from "simple-git";
+import { simpleGit } from "simple-git";
 import { existsSync } from "fs";
 import { REPOS_DIR } from "../constants.js";
 
