@@ -41,21 +41,6 @@ Output goes to `skills-pack/<repo>-<timestamp>/` with a README and all `.skill` 
 npm install -g skpkg
 ```
 
-## Development
-
-```bash
-git clone <repo-url>
-cd SkillInstaller
-bun install
-bun src/index.ts pack getagentseal/founder-playbook
-
-# Run tests
-bun test
-
-# Build for publishing
-bun run build
-```
-
 ## How it works
 
 1. Clones the GitHub repo locally (temp, removed after packing)
