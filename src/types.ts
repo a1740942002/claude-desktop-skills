@@ -2,6 +2,7 @@ export interface SkillMeta {
   name: string;
   description: string;
   files: string[];
+  _localDir?: string;
 }
 
 export interface RegistrySkill {

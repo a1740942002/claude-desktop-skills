@@ -31,7 +31,8 @@
   ],
   "dependencies": {
     "commander": "^14.0.3",
-    "gray-matter": "^4.0.3"
+    "gray-matter": "^4.0.3",
+    "simple-git": "^3.36.0"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.7.0",

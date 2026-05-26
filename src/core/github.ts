@@ -1,57 +1,119 @@
+import { tmpdir } from "os";
+import { join } from "path";
+import { mkdtempSync, readdirSync, readFileSync, statSync, rmSync } from "fs";
+import { simpleGit } from "simple-git";
 import matter from "gray-matter";
-import { SKILL_FILENAME } from "../constants.js";
+import { SKILL_FILENAME, EXCLUDED_DIRS } from "../constants.js";
 import type { SkillMeta } from "../types.js";
 
-interface TreeItem {
-  path: string;
-  type: string;
-  sha: string;
+export interface RepoInfo {
+  owner: string;
+  repo: string;
+  branch: string;
+  commitSha: string;
 }
 
-async function ghFetch(url: string): Promise<Response> {
-  const res = await fetch(url, {
-    headers: { Accept: "application/vnd.github.v3+json" },
-  });
-  if (!res.ok) {
-    if (res.status === 403) {
-      throw new Error("GitHub API rate limit exceeded. Try again later.");
+export interface ClonedRepo {
+  localPath: string;
+  info: RepoInfo;
+  cleanup: () => void;
+}
+
+export function parseRepoId(input: string): { owner: string; repo: string } {
+  const cleaned = input.replace(/\/+$/, "");
+  const parts = cleaned.split("/");
+  if (parts.length < 2 || !parts[0] || !parts[1]) {
+    throw new Error(
+      `Invalid repo format: "${input}". Expected "owner/repo" (e.g., "getagentseal/founder-playbook").`
+    );
+  }
+  return { owner: parts[0], repo: parts[1] };
+}
+
+export async function cloneRepo(
+  owner: string,
+  repo: string
+): Promise<ClonedRepo> {
+  const localPath = mkdtempSync(join(tmpdir(), `cds-${repo}-`));
+  const url = `https://github.com/${owner}/${repo}.git`;
+  const git = simpleGit();
+
+  await git.clone(url, localPath, ["--depth", "1"]);
+
+  const clonedGit = simpleGit(localPath);
+  const log = await clonedGit.log({ maxCount: 1 });
+  const branch =
+    (await clonedGit.revparse(["--abbrev-ref", "HEAD"])).trim() || "main";
+  const commitSha = log.latest?.hash ?? "unknown";
+
+  return {
+    localPath,
+    info: { owner, repo, branch, commitSha },
+    cleanup: () => rmSync(localPath, { recursive: true, force: true }),
+  };
+}
+
+function scanSkillDirs(
+  baseDir: string,
+  relativePath = ""
+): Array<{ dirPath: string; relPath: string }> {
+  const results: Array<{ dirPath: string; relPath: string }> = [];
+  const entries = readdirSync(baseDir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (!entry.isDirectory() || EXCLUDED_DIRS.has(entry.name)) continue;
+
+    const fullPath = join(baseDir, entry.name);
+    const relPath = relativePath ? `${relativePath}/${entry.name}` : entry.name;
+    const skillFile = join(fullPath, SKILL_FILENAME);
+
+    try {
+      statSync(skillFile);
+      results.push({ dirPath: fullPath, relPath });
+    } catch {
+      const nested = scanSkillDirs(fullPath, relPath);
+      results.push(...nested);
     }
-    throw new Error(`GitHub API error: ${res.status} ${res.statusText}`);
   }
-  return res;
+
+  return results;
 }
 
-async function getDefaultBranch(owner: string, repo: string): Promise<string> {
-  const res = await ghFetch(`https://api.github.com/repos/${owner}/${repo}`);
-  const data = (await res.json()) as { default_branch: string };
-  return data.default_branch;
-}
+export function listSkillsFromLocal(localPath: string): SkillMeta[] {
+  const skillDirs = scanSkillDirs(localPath);
+  const skills: SkillMeta[] = [];
 
-async function getTree(
-  owner: string,
-  repo: string,
-  branch: string
-): Promise<TreeItem[]> {
-  const res = await ghFetch(
-    `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`
-  );
-  const data = (await res.json()) as { tree: TreeItem[] };
-  return data.tree;
-}
+  for (const { dirPath, relPath } of skillDirs) {
+    const skillFilePath = join(dirPath, SKILL_FILENAME);
+    const content = readFileSync(skillFilePath, "utf-8");
 
-async function getFileContent(
-  owner: string,
-  repo: string,
-  path: string
-): Promise<string> {
-  const res = await ghFetch(
-    `https://api.github.com/repos/${owner}/${repo}/contents/${path}`
-  );
-  const data = (await res.json()) as { content: string; encoding: string };
-  if (data.encoding === "base64") {
-    return Buffer.from(data.content, "base64").toString("utf-8");
+    let name: string | null = null;
+    let description: string | null = null;
+    try {
+      const { data } = matter(content);
+      name = data.name ?? null;
+      description = data.description ?? null;
+    } catch {}
+
+    const dirName = relPath.split("/").pop() ?? relPath;
+
+    const files = readdirSync(dirPath)
+      .filter((f) => {
+        if (f === ".DS_Store") return false;
+        const full = join(dirPath, f);
+        return statSync(full).isFile();
+      });
+
+    skills.push({
+      name: name ?? dirName,
+      description:
+        description ?? (firstParagraph(content) || `Skill from ${dirName}`),
+      files,
+      _localDir: dirPath,
+    });
   }
-  return data.content;
+
+  return skills;
 }
 
 function firstParagraph(content: string): string {
@@ -73,96 +135,4 @@ function firstParagraph(content: string): string {
   }
   const text = paragraphLines.join(" ");
   return text.length > 200 ? text.slice(0, 200) + "…" : text;
-}
-
-export interface RepoInfo {
-  owner: string;
-  repo: string;
-  branch: string;
-  commitSha: string;
-}
-
-export function parseRepoId(input: string): { owner: string; repo: string } {
-  const cleaned = input.replace(/\/+$/, "");
-  const parts = cleaned.split("/");
-  if (parts.length < 2 || !parts[0] || !parts[1]) {
-    throw new Error(
-      `Invalid repo format: "${input}". Expected "owner/repo" (e.g., "getagentseal/founder-playbook").`
-    );
-  }
-  return { owner: parts[0], repo: parts[1] };
-}
-
-export async function fetchRepoInfo(
-  owner: string,
-  repo: string
-): Promise<RepoInfo> {
-  const branch = await getDefaultBranch(owner, repo);
-  const res = await ghFetch(
-    `https://api.github.com/repos/${owner}/${repo}/commits/${branch}`
-  );
-  const data = (await res.json()) as { sha: string };
-  return { owner, repo, branch, commitSha: data.sha };
-}
-
-export async function listSkillsFromApi(
-  owner: string,
-  repo: string
-): Promise<SkillMeta[]> {
-  const info = await fetchRepoInfo(owner, repo);
-  const tree = await getTree(owner, repo, info.branch);
-
-  const skillFiles = tree.filter(
-    (item) => item.type === "blob" && item.path.endsWith(`/${SKILL_FILENAME}`)
-  );
-
-  const skills: SkillMeta[] = [];
-
-  for (const sf of skillFiles) {
-    const dirPath = sf.path.replace(`/${SKILL_FILENAME}`, "");
-    const dirName = dirPath.split("/").pop() ?? dirPath;
-
-    const content = await getFileContent(owner, repo, sf.path);
-
-    let name: string | null = null;
-    let description: string | null = null;
-    try {
-      const { data } = matter(content);
-      name = data.name ?? null;
-      description = data.description ?? null;
-    } catch {}
-
-    const files = tree
-      .filter(
-        (item) =>
-          item.type === "blob" &&
-          item.path.startsWith(dirPath + "/") &&
-          !item.path.slice(dirPath.length + 1).includes("/")
-      )
-      .map((item) => item.path.split("/").pop()!);
-
-    skills.push({
-      name: name ?? dirName,
-      description:
-        description ?? (firstParagraph(content) || `Skill from ${dirName}`),
-      files,
-    });
-  }
-
-  return skills;
-}
-
-export async function downloadFile(
-  owner: string,
-  repo: string,
-  path: string
-): Promise<Buffer> {
-  const res = await ghFetch(
-    `https://api.github.com/repos/${owner}/${repo}/contents/${path}`
-  );
-  const data = (await res.json()) as { content: string; encoding: string };
-  if (data.encoding === "base64") {
-    return Buffer.from(data.content, "base64");
-  }
-  return Buffer.from(data.content, "utf-8");
 }

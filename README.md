@@ -2,6 +2,11 @@
 
 CLI tool that packages skills from GitHub repos into `.skill` files for Claude Desktop.
 
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18+)
+- [Git](https://git-scm.com/)
+
 ## Quick Start
 
 ```bash
