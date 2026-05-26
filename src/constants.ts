@@ -2,7 +2,7 @@ import { homedir } from "os";
 import { join } from "path";
 import type { Registry } from "./types.js";
 
-export const SKILL_INSTALLER_DIR = join(homedir(), ".skill-installer");
+export const SKILL_INSTALLER_DIR = join(homedir(), ".skpkg");
 export const REPOS_DIR = join(SKILL_INSTALLER_DIR, "repos");
 export const REGISTRY_PATH = join(SKILL_INSTALLER_DIR, "registry.json");
 

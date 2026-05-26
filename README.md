@@ -10,6 +10,8 @@ npx skpkg pack getagentseal/founder-playbook
 
 Then upload in Claude Desktop: **Customize → Skills → + → Create skill → Upload a skill**
 
+![Upload a skill in Claude Desktop](images/upload-skill.png)
+
 Works with `npx` and `bunx`.
 
 ## Commands
@@ -56,8 +58,7 @@ bun run build
 
 ## How it works
 
-1. Clones the GitHub repo locally (`~/.skpkg/repos/`)
+1. Clones the GitHub repo locally (temp, removed after packing)
 2. Scans for directories containing `SKILL.md`
 3. Extracts name/description from YAML frontmatter
 4. Zips each skill folder into a `.skill` file (the format Claude Desktop expects)
-# skpkg

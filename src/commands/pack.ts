@@ -1,5 +1,5 @@
-import { join } from "path";
-import { mkdirSync, existsSync, writeFileSync } from "fs";
+import { join, dirname } from "path";
+import { mkdirSync, existsSync, writeFileSync, rmSync, readdirSync } from "fs";
 import { execSync } from "child_process";
 import { parseRepoId, cloneOrPull, repoLocalPath } from "../core/repo.js";
 import { scanSkills, findSkillDir } from "../core/scanner.js";
@@ -86,6 +86,12 @@ export async function packCommand(
     "",
   ];
   writeFileSync(join(outputDir, "README.md"), readmeLines.join("\n"));
+
+  rmSync(localPath, { recursive: true, force: true });
+  const ownerDir = dirname(localPath);
+  if (existsSync(ownerDir) && readdirSync(ownerDir).length === 0) {
+    rmSync(ownerDir);
+  }
 
   console.log(`\nPacked ${packedSkills.length} skill(s) to ${outputDir}/`);
   console.log(
