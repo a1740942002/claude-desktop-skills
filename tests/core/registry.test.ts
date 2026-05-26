@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { readRegistry, writeRegistry } from "../../src/core/registry.js";
 import { mkdtempSync, rmSync, writeFileSync, readFileSync } from "fs";
 import { join } from "path";

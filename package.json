@@ -1,23 +1,22 @@
 {
-  "name": "skillinstaller",
+  "name": "skpkg",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs"
-  },
+  "description": "Install skills from GitHub repos into Claude Desktop",
   "bin": {
-    "skill-installer": "./node_modules/.bin/tsx src/index.ts"
+    "skpkg": "dist/index.js"
   },
   "scripts": {
-    "dev": "tsx src/index.ts",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "dev": "bun src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target node --format esm",
+    "prepublishOnly": "bun run build",
+    "test": "bun test",
+    "test:watch": "bun test --watch"
   },
-  "keywords": [],
+  "keywords": ["claude", "skills", "cli"],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "module",
+  "files": ["dist"],
   "dependencies": {
     "commander": "^14.0.3",
     "gray-matter": "^4.0.3",
@@ -25,8 +24,6 @@
   },
   "devDependencies": {
     "@types/node": "^25.9.1",
-    "tsx": "^4.22.3",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.7"
+    "typescript": "^6.0.3"
   }
 }
