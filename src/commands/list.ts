@@ -1,17 +1,10 @@
-import { existsSync } from "fs";
-import { parseRepoId, cloneOrPull, repoLocalPath } from "../core/repo.js";
-import { scanSkills } from "../core/scanner.js";
+import { parseRepoId, listSkillsFromApi } from "../core/github.js";
 
 export async function listCommand(repoInput: string): Promise<void> {
-  const repoId = parseRepoId(repoInput);
-  const localPath = repoLocalPath(repoId.owner, repoId.repo);
+  const { owner, repo } = parseRepoId(repoInput);
 
-  if (!existsSync(localPath)) {
-    console.log(`Cloning ${repoId.owner}/${repoId.repo}...`);
-    await cloneOrPull(repoId);
-  }
-
-  const skills = scanSkills(localPath);
+  console.log(`Fetching skills from ${owner}/${repo}...`);
+  const skills = await listSkillsFromApi(owner, repo);
 
   if (skills.length === 0) {
     console.log(`No skills found in ${repoInput}.`);
