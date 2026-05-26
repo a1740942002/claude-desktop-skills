@@ -94,3 +94,41 @@ export function scanSkills(repoDir: string, maxDepth = 3): SkillMeta[] {
   walk(repoDir, 0);
   return skills;
 }
+
+export function findSkillDir(
+  dir: string,
+  skillName: string,
+  maxDepth = 3,
+  depth = 0
+): string | null {
+  if (depth > maxDepth) return null;
+
+  let entries: string[];
+  try {
+    entries = readdirSync(dir);
+  } catch {
+    return null;
+  }
+
+  if (entries.includes(SKILL_FILENAME)) {
+    if (basename(dir) === skillName) return dir;
+    const content = readFileSync(join(dir, SKILL_FILENAME), "utf-8");
+    const { name } = parseFrontmatter(content);
+    if (name === skillName) return dir;
+  }
+
+  for (const entry of entries) {
+    if (EXCLUDED_DIRS.has(entry)) continue;
+    const full = join(dir, entry);
+    try {
+      if (statSync(full).isDirectory()) {
+        const result = findSkillDir(full, skillName, maxDepth, depth + 1);
+        if (result) return result;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
