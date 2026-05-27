@@ -15,7 +15,7 @@ npx claude-desktop-skills pack <owner/repo>
 
 Then upload in Claude Desktop: **Customize → Skills → + → Create skill → Upload a skill**
 
-![Upload a skill in Claude Desktop](images/upload-skill.png)
+![Upload a skill in Claude Desktop](https://raw.githubusercontent.com/a1740942002/claude-desktop-skills/main/images/upload-skill.png)
 
 Works with `npx` and `bunx`.
 
