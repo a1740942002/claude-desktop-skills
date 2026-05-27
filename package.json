@@ -1,6 +1,6 @@
 {
   "name": "claude-desktop-skills",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Install skills from GitHub repos into Claude Desktop",
   "bin": {
     "claude-desktop-skills": "dist/index.js"
